@@ -22,6 +22,7 @@ public static void main(String[] args) {
      JDA jda = builder.build();
 
      commands.publishCommands(jda.updateCommands());
+}
 ```
 
 You can use a database to set the prefix for each guild:
@@ -55,11 +56,12 @@ public class HelloCommand {
 ```
 #### Output
 - Slash Command <br>
-![SlashCommand](.assets/example-1-0.png)
-![SlashCommand Reply](.assets/example-1-1.png)<br>
+<img src=".assets/example-1-0.png" width="600"></img>
+<img src=".assets/example-1-1.png" width="300"></img>
+
   
 - Common Command <br>
-![img.png](.assets/example-1-3.png)
-![img.png](.assets/example-1-2.png)
+<img src=".assets/example-1-3.png" width="530"></img>
+<img src=".assets/example-1-2.png" width="300"></img>
 
 
