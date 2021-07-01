@@ -1,0 +1,51 @@
+plugins {
+    id 'java'
+    id 'application'
+    id "com.github.johnrengelman.shadow" version "6.0.0"
+}
+
+group 'me.skiincraft'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven {
+        name 'm2-dv8tion'
+        url 'https://m2.dv8tion.net/releases'
+    }
+    maven {
+        url 'http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases/'
+    }
+}
+
+compileJava.options.encoding = 'UTF-8'
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+dependencies {
+
+    implementation("net.dv8tion:JDA:4.3.0_277")
+    compileOnly(group: 'gnu.trove', name: 'trove', version: '3.0.3')
+    implementation 'org.springframework:spring-context:5.1.4.RELEASE'
+    implementation 'org.springframework:spring-orm:5.1.4.RELEASE'
+    implementation 'org.springframework.data:spring-data-jpa:2.1.4.RELEASE'
+
+    // Hibernate
+    implementation 'org.hibernate:hibernate-core:5.2.12.Final'
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+
+    // Database PostgreSQL
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.19'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+application {
+    mainClassName('me.skiincraft.core.Main')
+}
