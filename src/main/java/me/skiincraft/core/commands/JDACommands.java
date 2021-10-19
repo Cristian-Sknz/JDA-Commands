@@ -35,6 +35,13 @@ import java.util.stream.Collectors;
 import static java.util.Arrays.stream;
 import static me.skiincraft.core.commands.util.Util.*;
 
+/** <h1>JDACommands</h1>
+ *
+ * <p>Está classe irá administrar os comandos da sua aplicação JDA,
+ * convertendo para SlashCommands e facilitando o trace de erros.</p>
+ *
+ * <p>Esta classe pode ser registrada como EventListener do JDA</p>
+ */
 public class JDACommands implements EventListener {
 
     private final PrefixConfiguration prefixConfiguration;
@@ -42,24 +49,67 @@ public class JDACommands implements EventListener {
     private final Map<Class<?>, Map<String, Object>> commands;
 
 
+    /**Este construtor possui parametros para configurar coisas basicas como o prefixo
+     * e o manipulador de exceções.
+     *
+     * @param prefix Configuração de prefixo dos comandos.
+     * @param exceptionHandler Configuração do manipulador de exceções.
+     *
+     * @see PrefixConfiguration
+     * @see CommandExceptionHandler
+     */
     public JDACommands(PrefixConfiguration prefix, CommandExceptionHandler exceptionHandler) {
         this.prefixConfiguration = prefix;
         this.exceptionHandler = exceptionHandler;
         this.commands = new HashMap<>();
     }
 
+    /** Este método serve para fazer o registro de comandos que
+     * serão convertidos para SlashCommands e posteriormente
+     * publicado.
+     *
+     * @param commandClass Classe que contém o comando com as anotações
+     */
     public <T> void register(@Nonnull Class<T> commandClass) {
         this.register(commandClass, null, null);
     }
 
+    /** Este método serve para fazer o registro de comandos que
+     * serão convertidos para SlashCommands e posteriormente
+     * publicado.
+     *
+     * @param commandClass Classe que contém o comando com as anotações
+     * @param argumentValidator Uma classe que fará a validação do comando antes de ser executado.
+     *
+     * @see me.skiincraft.core.commands.impl.DefaultArgumentValidator
+     */
     public <T> void register(@Nonnull Class<T> commandClass, ArgumentValidator argumentValidator) {
         this.register(commandClass, null, argumentValidator);
     }
 
+    /** Este método serve para fazer o registro de comandos que
+     * serão convertidos para SlashCommands e posteriormente
+     * publicado.
+     *
+     * @param commandClass Classe que contém o comando com as anotações
+     * @param instance Uma instância ativa que poderá ser utilizada nos comandos.
+     *                 <p>Example: <code>new MyCommand()</code></p>
+     */
     public <T> void register(@Nonnull Class<T> commandClass, Supplier<T> instance) {
         this.register(commandClass, instance, null);
     }
 
+    /** Este método serve para fazer o registro de comandos que
+     * serão convertidos para SlashCommands e posteriormente
+     * publicado.
+     *
+     * @param commandClass Classe que contém o comando com as anotações
+     * @param instance Uma instância ativa que poderá ser utilizada nos comandos.
+     *                 <p>Example: <code>new MyCommand()</code></p>
+     * @param argumentValidator Uma classe que fará a validação do comando antes de ser executado.
+     *
+     * @see me.skiincraft.core.commands.impl.DefaultArgumentValidator
+     */
     public <T> void register(@Nonnull Class<T> commandClass, Supplier<T> instance, ArgumentValidator argumentValidator) {
         Map<String, Object> commandConfiguration = new CommandClassParser(commandClass, Objects.nonNull(argumentValidator)).parse();
         if (Objects.isNull(instance)) {
@@ -130,7 +180,7 @@ public class JDACommands implements EventListener {
         return injector;
     }
 
-    public CommandParameterInjector prepareInjector(GuildMessageReceivedEvent e) {
+    private CommandParameterInjector prepareInjector(GuildMessageReceivedEvent e) {
         CommandParameterInjector injector = new CommandParameterInjector();
         return injector.addBean(e.getGuild())
                 .addBean(e.getAuthor())
@@ -166,7 +216,7 @@ public class JDACommands implements EventListener {
         commandExecutor.invoke(attributes.get("instance"), parameters);
     }
 
-    public OptionData getOption(Map<String, Object> attributes, String name){
+    private OptionData getOption(Map<String, Object> attributes, String name){
         Object options = attributes.get("options");
         if (Objects.isNull(options)){
             return null;
