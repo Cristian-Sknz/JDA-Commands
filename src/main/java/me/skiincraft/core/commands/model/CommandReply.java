@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 
 public class CommandReply {
 
@@ -61,7 +60,7 @@ public class CommandReply {
     }
 
 
-    public RestAction<?> ignoreReflectionException(String methodName, Object message, @Nonnull Class<?>[] parameters){
+    private RestAction<?> ignoreReflectionException(String methodName, Object message, @Nonnull Class<?>[] parameters){
         try {
             Method method = getReplierClass().getMethod(methodName, parameters[0]);
             return (RestAction<?>) method.invoke(replier, message);
@@ -72,7 +71,7 @@ public class CommandReply {
         return null;
     }
 
-    public Class<?> getReplierClass(){
+    private Class<?> getReplierClass(){
         return replier.getClass();
     }
 

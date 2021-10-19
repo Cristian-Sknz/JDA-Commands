@@ -7,8 +7,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.utils.data.DataObject;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -30,7 +28,6 @@ public class OptionMappingParser extends OptionMapping {
         return (Objects.isNull(object)) ? null : object.toString();
     }
 
-    @NotNull
     @Override
     public OptionType getType() {
         return optionData.getType();
@@ -89,13 +86,11 @@ public class OptionMappingParser extends OptionMapping {
         return optional.get();
     }
 
-    @Nullable
     @Override
     public Member getAsMember() {
         return message.getGuild().getMember(getAsUser());
     }
 
-    @NotNull
     @Override
     public User getAsUser() {
         IMentionable mention = getAsMentionable();
@@ -105,7 +100,6 @@ public class OptionMappingParser extends OptionMapping {
         return null;
     }
 
-    @NotNull
     @Override
     public Role getAsRole() {
         IMentionable mention = getAsMentionable();
@@ -115,24 +109,22 @@ public class OptionMappingParser extends OptionMapping {
         throw new RuntimeException("");
     }
 
-    @NotNull
     @Override
     public GuildChannel getAsGuildChannel() {
         return message.getTextChannel();
     }
 
-    @Nullable
     @Override
     public MessageChannel getAsMessageChannel() {
         return message.getTextChannel();
     }
 
-    @NotNull
     @Override
     public ChannelType getChannelType() {
         return ChannelType.TEXT;
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T valid(Object value, T defaultItem){
         if (value == null)
             return defaultItem;
@@ -145,7 +137,7 @@ public class OptionMappingParser extends OptionMapping {
         for (OptionData next : map.keySet()) {
             if (next.isRequired())
                 if (map.get(next) == null)
-                    throw new CommandArgumentException("Argumento obrigatório está nulo");
+                    throw new CommandArgumentException("Argumento obrigatório está nulo", next);
 
             mappings.add(new OptionMappingParser(message, next, map.get(next)));
         }

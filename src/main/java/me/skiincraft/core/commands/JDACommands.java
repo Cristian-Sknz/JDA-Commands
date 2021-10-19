@@ -2,6 +2,7 @@ package me.skiincraft.core.commands;
 
 import me.skiincraft.core.commands.annotation.CommandParameter;
 import me.skiincraft.core.commands.configuration.ArgumentValidator;
+import me.skiincraft.core.commands.configuration.CommandExceptionHandler;
 import me.skiincraft.core.commands.configuration.PrefixConfiguration;
 import me.skiincraft.core.commands.exception.CommandArgumentException;
 import me.skiincraft.core.commands.exception.CommandRegisterException;
@@ -37,11 +38,13 @@ import static me.skiincraft.core.commands.util.Util.*;
 public class JDACommands implements EventListener {
 
     private final PrefixConfiguration prefixConfiguration;
+    private final CommandExceptionHandler exceptionHandler;
     private final Map<Class<?>, Map<String, Object>> commands;
 
 
-    public JDACommands(PrefixConfiguration prefix) {
+    public JDACommands(PrefixConfiguration prefix, CommandExceptionHandler exceptionHandler) {
         this.prefixConfiguration = prefix;
+        this.exceptionHandler = exceptionHandler;
         this.commands = new HashMap<>();
     }
 
@@ -88,11 +91,19 @@ public class JDACommands implements EventListener {
     @Override
     @SubscribeEvent
     public void onEvent(@NotNull GenericEvent event) {
-        if (event instanceof SlashCommandEvent)
-            this.slash((SlashCommandEvent) event);
+        try {
+            if (event instanceof SlashCommandEvent)
+                this.slash((SlashCommandEvent) event);
 
-        if (event instanceof GuildMessageReceivedEvent)
-            this.defaultCommand((GuildMessageReceivedEvent) event);
+            if (event instanceof GuildMessageReceivedEvent)
+                this.defaultCommand((GuildMessageReceivedEvent) event);
+        } catch (Exception e) {
+            if (event instanceof SlashCommandEvent)
+                exceptionHandler.onCommandException(e, new CommandReply(((SlashCommandEvent) event).getInteraction()));
+
+            if (event instanceof GuildMessageReceivedEvent)
+                exceptionHandler.onCommandException(e, new CommandReply(((GuildMessageReceivedEvent) event).getMessage()));
+        }
     }
 
     public CommandParameterInjector prepareInjector(SlashCommandEvent e) {
@@ -129,7 +140,7 @@ public class JDACommands implements EventListener {
                 .addBean(e.getChannel());
     }
 
-    private void slash(SlashCommandEvent e) {
+    private void slash(SlashCommandEvent e) throws Exception {
         Optional<Map<String, Object>> optional = getAttributeByName(commands, e.getName(), false);
         if (optional.isEmpty()) {
             return;
@@ -152,12 +163,7 @@ public class JDACommands implements EventListener {
             }
             return injector.inject(parameter.getType());
         }).toArray(Object[]::new);
-
-        try {
-            commandExecutor.invoke(attributes.get("instance"), parameters);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        commandExecutor.invoke(attributes.get("instance"), parameters);
     }
 
     public OptionData getOption(Map<String, Object> attributes, String name){
@@ -172,7 +178,7 @@ public class JDACommands implements EventListener {
         return option.orElse(null);
     }
 
-    private void defaultCommand(GuildMessageReceivedEvent e) {
+    private void defaultCommand(GuildMessageReceivedEvent e) throws Exception {
         User member = Objects.requireNonNull(e.getMember(), "user").getUser();
         if (member.isBot() || !e.getChannel().canTalk()) {
             return;
@@ -196,8 +202,14 @@ public class JDACommands implements EventListener {
         try {
             options = OptionMappingParser.of(e.getMessage(), validator.validate(dataOptions.stream()
                     .collect(Collectors.toMap((value) -> value, (value) -> new Object[0])), args));
-        } catch (CommandArgumentException ex){
-            ex.printStackTrace();
+        } catch (CommandArgumentException ex) {
+            exceptionHandler.onCommandArgumentException(new CommandArgumentException(ex,
+                    attributes.get("instance").getClass(),
+                            (CommandData) attributes.get("commandData"),
+                    e.getGuild(),
+                    e.getMessage(),
+                    e.getAuthor()),
+                    new CommandReply(e.getMessage()));
             return;
         }
 
@@ -218,12 +230,7 @@ public class JDACommands implements EventListener {
             }
             return injector.inject(parameter.getType());
         }).toArray(Object[]::new);
-
-        try {
-            commandExecutor.invoke(attributes.get("instance"), methodParameters);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        commandExecutor.invoke(attributes.get("instance"), methodParameters);
     }
 
     private Object getCommandParameter(Parameter parameter, String value, OptionMapping option, List<OptionData> commandData) {
@@ -240,6 +247,8 @@ public class JDACommands implements EventListener {
                         .map(Command.Choice::getName).findFirst().orElse(option.getAsString());
             }
         }
+        if ((parameter.getType() == String.class))
+            return option.getAsString();
         switch (option.getType()) {
             case STRING:
                 return option.getAsString();

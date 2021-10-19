@@ -1,13 +1,29 @@
 package me.skiincraft.core.commands.util;
 
+import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Util {
+
+    public static String[] getCommandPath(CommandData command){
+        List<String> options = new ArrayList<>();
+        options.add(command.getName());
+        options.addAll(command.getOptions().stream().map(option -> {
+            if (!option.getChoices().isEmpty()){
+                return String.format((option.isRequired()) ? "<%s>" : "[%s]", option.getChoices().stream()
+                        .map(Command.Choice::getName)
+                        .collect(Collectors.joining("/")));
+            }
+            return String.format((option.isRequired()) ? "<%s>" : "[%s]", option.getName());
+        }).collect(Collectors.toList()));
+        return options.toArray(String[]::new);
+    }
 
     public static boolean startWithIgnoreCase(String arg, String prefix){
         return arg.toLowerCase().startsWith(prefix.toLowerCase());
