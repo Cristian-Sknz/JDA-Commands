@@ -5,6 +5,8 @@ plugins {
 group 'me.skiincraft'
 version '1.0-SNAPSHOT'
 
+sourceCompatibility = '11'
+
 repositories {
     mavenCentral()
     maven {
